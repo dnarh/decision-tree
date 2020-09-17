@@ -21,8 +21,6 @@ class DecisionTree:
 
     def learn(self, X, y, impurity_measure='entropy'):
         self.impurity_measure = impurity_measure
-        # x = [pd.DataFrame(x) for x in [X, y] if not isinstance(x, (pd.Series, pd.DataFrame))]
-        #data = pd.concat([X_train, y_train], axis=1)
         data = pd.concat([X, y], axis=1)
         self.target = data.keys()[-1]
         self._recursive_build(data, self.tree)
@@ -42,7 +40,7 @@ class DecisionTree:
             return self._get_prediction(row, tree.left)
 
     def _recursive_build(self, data, node):
-        if (data[self.target].values[0] ==  data[self.target].values).all():
+        if (data[self.target].values[0] == data[self.target].values).all():
             node.label = data[self.target].iloc[0]
             return
         col, mean = self._select_split_node(data)
@@ -66,6 +64,14 @@ class DecisionTree:
                     opt_ig = ig[k]['ig']
                     opt_col = k
                     opt_mean = ig[k]['mean']
+        elif self.impurity_measure == 'gini':
+            g = self._gini_index(data)
+            opt_gini, opt_col, opt_mean = 1, 0, 0
+            for k in g.keys():
+                if g[k]['gini_idx'] < opt_gini:
+                    opt_gini = g[k]['gini_idx']
+                    opt_col = k
+                    opt_mean = g[k]['mean']
         return opt_col, opt_mean
 
     def _info_gain(self, data):
@@ -91,3 +97,21 @@ class DecisionTree:
                 entropy_set += -frac*np.log2(frac+zero)
             entropy_attribute += -(d/len(data))*entropy_set
         return abs(entropy_attribute), mean
+
+    def _gini_index(self, data):
+        g = dict()
+        zero = np.finfo(float).eps
+        for attribute in data.keys()[:-1]:
+            g_attribute = 0
+            mean = np.mean(data[attribute].values)
+            sub_data = [data[data[attribute] <= mean], data[data[attribute] > mean]]
+            for subset in sub_data:
+                g_set = 0
+                for target_val in np.unique(subset[self.target].values):
+                    n = len(subset[subset[self.target] == target_val])
+                    d = len(subset)
+                    frac = n / (d + zero)
+                    g_set += np.float_power(frac, 2)
+                g_attribute += (d / len(data)) * (1 - g_set)
+            g[attribute] = (g_attribute, mean)
+        return {k: {'gini_idx': g[k][0], 'mean': g[k][1]} for k in g}
