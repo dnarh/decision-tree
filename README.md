@@ -6,8 +6,8 @@ Decision Tree
 ### Structure
 
     .
-    ├── data            	 # Dataset(s) used for testing decision tree
-    ├── notebooks                # Notebooks for building and testing decision tree implementations
-    ├── src                      # Source code
+    ├── data        		 # Dataset(s) used for testing decision tree
+    ├── notebooks		 # Notebooks for building and testing decision tree implementations
+    ├── src			 # Source code
     ├── .gitignore		 # Files that should be ignored by git.	
     └── README.md
